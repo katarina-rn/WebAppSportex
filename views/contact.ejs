@@ -1,0 +1,54 @@
+<%- include("header")-%>
+<section id="contact">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-7 col-md-12 contactInfo">
+        <p>Adresa: Bogdana Teofilovića 20</p>
+        <p>Telefon: 123654</p>
+        <p>Email: sportex@sportex.com</p>
+        <p>Ukoliko imate nekih pitanja za nas možete popuniti sledeću formu <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-double-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M3.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L9.293 8 3.646 2.354a.5.5 0 0 1 0-.708z" />
+            <path fill-rule="evenodd" d="M7.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L13.293 8 7.646 2.354a.5.5 0 0 1 0-.708z" />
+          </svg></p>
+      </div>
+      <div class="col-lg-5 col-md-12">
+        <form class="contactForm" method="post" action="/kontakt">
+          <div class="form-group">
+            <label for="inputName">Ime i prezime:</label>
+            <input type="text" class="form-control" id="inputName" placeholder="Ime i prezime" name="senderName" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="inputEmail">Email:</label>
+            <input type="email" class="form-control" id="inputEmail" placeholder="Email" name="senderEmail" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="inputPhoneNumber">Kontakt telefon:</label>
+            <input type="text" class="form-control" id="inputPhoneNumber" placeholder="Telefon" name="senderTelepone" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="inputMessage">Poruka:</label>
+            <textarea class="form-control" id="inputMessage" rows="3" name="content" autocomplete="off"></textarea>
+          </div>
+          <button type="submit" class="btn modalBtn" name="button" data-toggle="modal" data-target="#messModal">Pošalji</button>
+          <!-- Modal -->
+          <div class="modal fade" id="messModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Poslato</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <a href="/kontakt" style="text-decoration:none"><span aria-hidden="true">&times;</span></a>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Vasa poruka je uspesno poslata</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+<%- include("footer")-%>
