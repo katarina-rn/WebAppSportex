@@ -7,16 +7,19 @@ var _ = require('lodash');
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 const multer = require('multer');
+const generator = require('generate-password');
 const saltRounds = 10;
 
 /*MULTER*/
 const storage = multer.diskStorage({
   destination: "public/img/products",
-  filename: function(req, file, cb){
+  filename: function(req, file, cb) {
     cb(null, file.originalname);
   }
 });
-const upload = multer({storage: storage});
+const upload = multer({
+  storage: storage
+});
 
 /*CREATING DATABASE*/
 mongoose.connect("mongodb://localhost:27017/sportexDB", {
@@ -36,7 +39,8 @@ const messageSchema = {
 const userSchema = {
   username: String,
   password: String,
-  name: String
+  name: String,
+  role: String
 }
 
 const productSchema = {
@@ -48,10 +52,20 @@ const productSchema = {
   imgUrl: String
 }
 
+const customerSchema = {
+  name: String,
+  email: String,
+  telephone: String,
+  addres: String,
+  pib: String,
+  password: String
+}
+
 /*CREATING COLLECTIONS(MODELS)*/
 const Message = mongoose.model("Message", messageSchema);
 const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
+const Customer = mongoose.model("Customer", customerSchema);
 
 /*SETTING APP PARAMETERS*/
 const app = express();
@@ -68,7 +82,8 @@ bcrypt.hash(process.env.PASSWORD, saltRounds, (e, hash) => {
   const newUser = new User({
     username: "radnik",
     password: hash,
-    name: "Ime"
+    name: "Ime",
+    role: "radnik"
   });
   User.find({}, function(err, users) {
     if (err) {
@@ -217,11 +232,67 @@ app.post("/proizvod", upload.single('productImage'), function(req, res) {
     brand: req.body.productBrand,
     price: req.body.productPrice,
     pricePDV: req.body.productPricePDV,
-    imgUrl: "/img/products/"+req.file.filename
+    imgUrl: "/img/products/" + req.file.filename
   });
   newProduct.save(err => {
     if (err) console.log(err);
     else res.redirect("/radnik/" + worker.name);
+  });
+});
+
+app.post("/narucilac", (req, res) => {
+  let generatedPassword = generator.generate({
+    length: 10,
+    numbers: true
+  });
+  bcrypt.hash(generatedPassword, saltRounds, (e, hash) => {
+    const newCustomer = new Customer({
+      name: req.body.customerName,
+      email: req.body.customerEmail,
+      telephone: req.body.customerTelephone,
+      addres: req.body.customerAdress,
+      pib: req.body.customerPIB,
+      password: hash
+    });
+    const newUser = new User({
+      username: newCustomer.email,
+      password: newCustomer.password,
+      name: newCustomer.name,
+      role: "narucilac"
+    });
+    Customer.find({}, function(err, customers) {
+      if (err) {
+        console.log(err);
+      } else {
+        if (customers.length !== 0) {
+          for (var i = 0; i < customers.length; i++) {
+            if (customers[i].email === newCustomer.email) {
+              res.send("Postoji narucilac sa unetom email adresom");
+            }
+          }
+        }
+        newCustomer.save(err => {
+          if (err) console.log(err);
+        });
+      }
+    });
+    User.find({}, function(err, users) {
+      if (err) {
+        console.log(err);
+      } else {
+        if (users.length !== 0) {
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].username === newUser.username) {
+              res.send("Postoji korisnik sa unetom email adresom");
+            }
+          }
+        }
+        newUser.save(err => {
+          if (err) console.log(err);
+          else res.redirect("/radnik/" + worker.name);
+        });
+      }
+    });
   });
 });
 

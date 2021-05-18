@@ -23,10 +23,19 @@
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
+          <a href="/radnik/<%=user.name%>"></a><span class="navbar-toggler-icon"></span><a>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Naručilac
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" data-toggle="modal" data-target="#addCustomer" class="modalAddBtn">Dodaj naručioca</a>
+                <a class="dropdown-item" href="#">Pregled naručioca</a>
+              </div>
+            </li>
             <li class="nav-item">
               <a class="nav-link" href="/poruke">Poruke</a>
             </li>
@@ -37,5 +46,42 @@
         </div>
       </div>
     </nav>
+    <div class="modal fade" id="addCustomer" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Dodaj naručioca</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form method="post" action="/narucilac">
+              <div class="form-group">
+                <label for="name" class="col-form-label">Naziv naručioca:</label>
+                <input type="text" class="form-control" id="customerName" placeholder="Naziv naručioca" name="customerName">
+              </div>
+              <div class="form-group">
+                <label for="name" class="col-form-label">Email:</label>
+                <input type="text" class="form-control" id="customerEmail" placeholder="Email naručioca" name="customerEmail">
+              </div>
+              <div class="form-group">
+                <label for="name" class="col-form-label">Telefon:</label>
+                <input type="text" class="form-control" id="customerTelephone" placeholder="Telefon naručioca" name="customerTelephone">
+              </div>
+              <div class="form-group">
+                <label for="name" class="col-form-label">Adresa:</label>
+                <input type="text" class="form-control" id="customerAdress" placeholder="Adresa naručioca" name="customerAdress">
+              </div>
+              <div class="form-group">
+                <label for="name" class="col-form-label">PIB:</label>
+                <input type="text" class="form-control" id="customerPIB" placeholder="PIB" name="customerPIB">
+              </div>
+              <button type="submit" class="btn btn-primary">Dodaj naručioca</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
   <hr class="nonVisible" style="display:none;">
