@@ -1,13 +1,15 @@
 <%- include("headerWorker")-%>
 <section>
   <div class="container-fluid">
-    <%messages.forEach(message =>{%>
+    <%messages.forEach((message, index) =>{%>
     <div class="row" style="margin-bottom:15px">
       <h3>Naziv posiljaoca: <%=message.name%></h3>
       <p class="mess">Email posiljaoca: <%=message.email%></p>
       <p class="mess">Telefon posiljaoca: <%=message.telephone%></p>
       <p class="mess">Poruka: <%=message.content%></p>
-      <hr>
+      <%if(index !== (messages.length-1)){%>
+        <hr>
+      <%}%>
     </div>
     <%})%>
   </div>

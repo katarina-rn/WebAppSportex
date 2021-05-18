@@ -129,7 +129,7 @@ label {
   border-bottom: 1px solid #007965;
 }
 
-.seeMore, .prod, .addPprod{
+.seeMore, .prod, .addProd{
   height: 45px;
   width: 100%;
   font-size: 1.2rem;
@@ -189,6 +189,10 @@ label {
   width: 70%;
 }
 
+.manipulating{
+  height: 370px;
+}
+
 /*LOGIN FORM*/
 #loginSection{
   text-align: right;
@@ -228,8 +232,7 @@ label {
   background-color: rgba(255,204,41,0.7);
 }
 .footer-padding{
-  padding-bottom: 80px;
-
+  padding-bottom: 100px;
 }
 
 .footer a {
@@ -250,12 +253,73 @@ html {
 }
 
 /*RESPONSIVE DESIGN*/
-@media screen and (max-width: 700px){
- .navbar-light{
-   height: auto;
-   text-align: left;
- }
- .navbar{
+@media screen and (max-width: 1280px){
+  .navbar-light{
+    height: auto;
+    text-align: left;
+    width: 100%;
+  }
+  .navbar{
+    width: 100%;
+  }
+  section{
+    width: 100%;
+  }
+  .imgsSlider{
+    width: 100%;
+  }
+  .imgs{
+    width: 100%;
+  }
+  .card{
+    margin: 15px auto;
+    height: 370px;
+  }
+  .manipulating{
+    height: auto;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px){
+  .card{
+    height: auto;
+    width: 90%;
+  }
+  .manipulating{
+    width: 100%;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px){
+  .card{
+    width: 60%;
+  }
+  .brandimg{
+    width: 35%;
+    margin: 10px auto;
+  }
+  .manipulating{
+    width: 100%;
+    height: auto;
+  }
+}
+@media screen and (max-width: 480px){
+ .card{
    width: 100%;
+ }
+ .productImageTop img{
+   width: 60%;
+ }
+ .brandimg{
+   width: 60%;
+ }
+ #footer{
+   height: 125px;
+ }
+ .footer-padding{
+   padding-bottom: 120px;
+ }
+ .manipulating{
+   height: auto;
  }
 }

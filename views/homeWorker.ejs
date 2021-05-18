@@ -2,11 +2,11 @@
 <section>
   <div class="container-fluid" style="margin-bottom: 10px">
     <div class="row">
-      <div class="col-8">
+      <div class="col-lg-8 col-sm-6 ">
         <h1>Proizvodi</h1>
       </div>
-      <div class="col-4">
-        <button type="submit" name="submit" data-toggle="modal" data-target="#addModal" class="modalAddBtn addPprod">Dodaj proizvod</button>
+      <div class="col-lg-4 col-sm-6 ">
+        <button type="submit" name="submit" data-toggle="modal" data-target="#addModal" class="modalAddBtn addProd">Dodaj proizvod</button>
       </div>
     </div>
   </div>
@@ -60,7 +60,7 @@
     <div class="row">
       <%products.forEach(product =>{%>
       <div class="col-lg-4 col-md-6">
-        <div class="card" style="height:370px;">
+        <div class="card manipulating">
           <div class="card-body">
             <h5 class="card-title" >Naziv proizvoda: <%=product.name%></h5>
             <form action="/proizvod/<%=product._id%>?_method=PUT" method="post" class="productCard" onsubmit="alert('Uspesno ste izmenili proizvod')">
