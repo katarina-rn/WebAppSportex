@@ -1,0 +1,23 @@
+<%-include("headerWorker")-%>
+<section>
+  <div class="container-fluid">
+    <div class="row">
+      <%customers.forEach((customer, index) =>{%>
+      <div class="col-lg-6 col-md-6">
+        <div class="customerInfo">
+          <h3><%=customer.name%></h3>
+          <p>Email: <%=customer.email%></p>
+          <p>Telefon: <%=customer.telephone%></p>
+          <p>Adresa: <%=customer.addres%></p>
+          <p>PIB: <%=customer.pib%></p>
+        </div>
+        <form  method="post" action="/narucilac/<%=customer._id%>?_method=DELETE" onclick="return confirm('Da li ste sigurni da zelite da obrisete ovog narucioca?')">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="">Obrisi narucioca</button>
+        </form>
+      </div>
+      <%})%>
+    </div>
+  </div>
+</section>
+<%- include("footer")-%>

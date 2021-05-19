@@ -107,7 +107,7 @@ label {
   color: #334443;
 }
 
-.mess{
+.mess, .customerInfo p{
   font-family: 'Oxygen', sans-serif;
   font-size: 1.2rem;
   padding-top: 2px;

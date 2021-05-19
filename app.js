@@ -169,6 +169,16 @@ app.get("/narucilac/:name", function(req, res) {
     });
 });
 
+app.get("/narucilac", (req, res) =>{
+  Customer.find({}, (err, customers) => {
+    if (err) console.log(err);
+    else res.render("customers", {
+      customers: customers,
+      user: worker
+    });
+  });
+});
+
 app.get("/poruke", function(req, res) {
   Message.find({}, (err, messages) => {
     if (err) console.log(err);
@@ -280,6 +290,7 @@ app.post("/narucilac", (req, res) => {
       password: hash
     });
     const newUser = new User({
+      _id: newCustomer._id,
       username: newCustomer.email,
       password: newCustomer.password,
       name: newCustomer.name,
@@ -337,6 +348,23 @@ app.route("/proizvod/:id")
     });
     res.redirect("/radnik/" + worker.name);
   });
+
+/*DELETE CUSTOMER*/
+app.route("/narucilac/:id")
+  .delete(function(req, res) {
+    let customerToDelete;
+    Customer.deleteOne({
+      _id: req.params.id
+    }, err => {
+      if (err) console.log(err);
+    });
+    User.deleteOne({
+      _id: req.params.id
+    }, err => {
+      if (err) console.log(err);
+    });
+    res.redirect("/narucilac");
+  })
 
 app.listen(3000, function() {
   console.log("Server is starting at point 3000");
