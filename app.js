@@ -89,9 +89,11 @@ bcrypt.hash(process.env.PASSWORD, saltRounds, (e, hash) => {
     if (err) {
       console.log(err);
     } else {
-      for (var i = 0; i < users.length; i++) {
-        if (users[i].username === newUser.username)
-          return;
+      if(users.length !== 0) {
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].username === newUser.username)
+            return;
+        }
       }
       newUser.save(err => {
         if (err)
@@ -124,10 +126,13 @@ let categories = [{
 ];
 
 let worker;
+let customer;
+let isAuthenticated = false;
 /*GET ROUTES*/
 app.get("/", function(req, res) {
   res.render("home", {
-    categories: categories
+    categories: categories,
+    isAuthenticated: isAuthenticated
   });
 });
 
@@ -157,6 +162,13 @@ app.get("/radnik/:name", function(req, res) {
   });
 });
 
+app.get("/narucilac/:name", function(req, res) {
+  res.render("home", {
+      isAuthenticated: isAuthenticated,
+      categories: categories
+    });
+});
+
 app.get("/poruke", function(req, res) {
   Message.find({}, (err, messages) => {
     if (err) console.log(err);
@@ -168,7 +180,11 @@ app.get("/poruke", function(req, res) {
 });
 
 app.get("/logout", function(req, res) {
-  worker = null;
+  worker!==null && worker===null;
+  if(customer!== null){
+    customer=null;
+    isAuthenticated = false;
+  }
   res.redirect("/");
 });
 
@@ -212,8 +228,16 @@ app.post("/login", function(req, res) {
       if (foundUser) {
         bcrypt.compare(password, foundUser.password, function(e, result) {
           if (result === true) {
-            worker = foundUser;
-            res.redirect("/radnik/" + foundUser.name);
+            if(foundUser.role === "radnik"){
+              worker = foundUser;
+              res.redirect("/radnik/" + foundUser.name);
+            }
+            if(foundUser.role === "narucilac"){
+              customer = foundUser;
+              isAuthenticated = true;
+              res.redirect("/narucilac/" + foundUser.name);
+            }
+
           } else {
             res.send("Pogresan password");
           }
@@ -245,6 +269,7 @@ app.post("/narucilac", (req, res) => {
     length: 10,
     numbers: true
   });
+  console.log(generatedPassword);
   bcrypt.hash(generatedPassword, saltRounds, (e, hash) => {
     const newCustomer = new Customer({
       name: req.body.customerName,
@@ -260,37 +285,29 @@ app.post("/narucilac", (req, res) => {
       name: newCustomer.name,
       role: "narucilac"
     });
-    Customer.find({}, function(err, customers) {
-      if (err) {
-        console.log(err);
-      } else {
-        if (customers.length !== 0) {
-          for (var i = 0; i < customers.length; i++) {
-            if (customers[i].email === newCustomer.email) {
-              res.send("Postoji narucilac sa unetom email adresom");
-            }
-          }
-        }
-        newCustomer.save(err => {
-          if (err) console.log(err);
-        });
-      }
-    });
+    let exists = false;
     User.find({}, function(err, users) {
       if (err) {
         console.log(err);
       } else {
+        let exists = false;
         if (users.length !== 0) {
           for (var i = 0; i < users.length; i++) {
             if (users[i].username === newUser.username) {
               res.send("Postoji korisnik sa unetom email adresom");
+              exists = true;
             }
           }
         }
-        newUser.save(err => {
-          if (err) console.log(err);
-          else res.redirect("/radnik/" + worker.name);
-        });
+        if(!exists){
+          newCustomer.save(err => {
+            if (err) console.log(err);
+          });
+          newUser.save(err => {
+            if (err) console.log(err);
+            else res.redirect("/radnik/" + worker.name);
+          });
+        }
       }
     });
   });
