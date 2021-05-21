@@ -21,7 +21,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form method="post" action="/proizvod" enctype="multipart/form-data">
+          <form method="post" action="/proizvod" enctype="multipart/form-data" class="addProductForm">
             <div class="form-group">
               <label for="name" class="col-form-label">Naziv proizvoda:</label>
               <input type="text" class="form-control" id="productName" placeholder="Naziv proizvoda" name="productName">
@@ -45,7 +45,7 @@
             </div>
             <div class="form-group">
               <label for="name" class="col-form-label">Cena sa PDV-om:</label>
-              <input type="text" class="form-control" id="productPrice" placeholder="Cena proizvoda sa PDV-om" name="productPricePDV">
+              <input type="text" class="form-control" id="productPricePDV" placeholder="Cena proizvoda sa PDV-om" name="productPricePDV">
             </div>
             <div class="mb-3">
               <label for="name" class="col-form-label">Izbaerite sliku:</label>

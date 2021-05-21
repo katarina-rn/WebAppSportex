@@ -3,7 +3,7 @@
   <div class="container-fluid">
     <h1><%=categoryTitle%></h1>
     <div class="row">
-    <%products.forEach(product =>{%>
+      <%products.forEach((product)=>{%>
       <div class="col-lg-3 col-md-6">
         <div class="card">
           <div class="productImageTop">
@@ -14,10 +14,21 @@
             <p class="card-text">Brand: <%=product.brand%></p>
             <p class="card-text">Cena: <%=product.price%> din.</p>
             <p class="card-text">Cena sa PDV-om: <%=product.pricePDV%> din.</p>
+            <form class="addItemForm" action="/dodajStavku" method="post">
+              <input type="hidden" name="log" class="isAuthenticated" value="<%=isAuthenticated%>">
+              <%if(customer !== null && customer !== undefined){%>
+              <input type="hidden" name="customerId" value="<%=customer._id%>">
+              <%}%>
+              <input type="hidden" name="productId" value="<%=product._id%>">
+              <input type="hidden" name="name" value="<%=product.name%>">
+              <input type="hidden" name="price" value="<%=product.pricePDV%>">
+              <input type="text" name="value" value="" class="quantity">
+              <button type="submit" value="submit">+</button>
+            </form>
           </div>
         </div>
       </div>
-    <%})%>
+      <%})%>
     </div>
   </div>
 </section>

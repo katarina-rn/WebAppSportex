@@ -61,11 +61,45 @@ const customerSchema = {
   password: String
 }
 
+const itemSchema = {
+  productId: Number,
+  quantity: Number,
+  name: String,
+  price: Number
+}
+
+
+
 /*CREATING COLLECTIONS(MODELS)*/
 const Message = mongoose.model("Message", messageSchema);
 const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
 const Customer = mongoose.model("Customer", customerSchema);
+const Item = mongoose.model("Item", itemSchema);
+
+
+const orderSchema = new mongoose.Schema({
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Customer"
+  },
+  products: [itemSchema],
+  active: {
+    type: Boolean,
+    default: true
+  },
+  modifiedOn: {
+    type: Date,
+    default: Date.now
+  },
+  subTotal: {
+    default: 0,
+    type: Number
+  }
+}, {
+  timestamps: true
+});
+const Order = mongoose.model("Order", orderSchema);
 
 /*SETTING APP PARAMETERS*/
 const app = express();
@@ -89,7 +123,7 @@ bcrypt.hash(process.env.PASSWORD, saltRounds, (e, hash) => {
     if (err) {
       console.log(err);
     } else {
-      if(users.length !== 0) {
+      if (users.length !== 0) {
         for (var i = 0; i < users.length; i++) {
           if (users[i].username === newUser.username)
             return;
@@ -132,12 +166,13 @@ let isAuthenticated = false;
 app.get("/", function(req, res) {
   res.render("home", {
     categories: categories,
-    isAuthenticated: isAuthenticated
+    isAuthenticated: isAuthenticated,
+    customer: customer
   });
 });
 
 app.get("/onama", function(req, res) {
-  res.render("about");
+  res.render("about",{isAuthenticated: isAuthenticated});
 });
 
 app.get("/proizvodi", function(req, res) {
@@ -145,11 +180,11 @@ app.get("/proizvodi", function(req, res) {
 });
 
 app.get("/brendovi", function(req, res) {
-  res.redirect("/#brands");
+  res.redirect("/#brands", {isAuthenticated: isAuthenticated});
 });
 
 app.get("/kontakt", function(req, res) {
-  res.render("contact");
+  res.render("contact", {isAuthenticated: isAuthenticated});
 });
 
 app.get("/radnik/:name", function(req, res) {
@@ -164,12 +199,13 @@ app.get("/radnik/:name", function(req, res) {
 
 app.get("/narucilac/:name", function(req, res) {
   res.render("home", {
-      isAuthenticated: isAuthenticated,
-      categories: categories
-    });
+    isAuthenticated: isAuthenticated,
+    categories: categories,
+    customer: customer
+  });
 });
 
-app.get("/narucilac", (req, res) =>{
+app.get("/narucilac", (req, res) => {
   Customer.find({}, (err, customers) => {
     if (err) console.log(err);
     else res.render("customers", {
@@ -190,9 +226,9 @@ app.get("/poruke", function(req, res) {
 });
 
 app.get("/logout", function(req, res) {
-  worker!==null && worker===null;
-  if(customer!== null){
-    customer=null;
+  worker !== null && worker === null;
+  if (customer !== null) {
+    customer = null;
     isAuthenticated = false;
   }
   res.redirect("/");
@@ -221,7 +257,9 @@ app.post("/proizvodi/:category", function(req, res) {
       console.log(err);
     res.render("categories", {
       categoryTitle: cat,
-      products: products
+      products: products,
+      customer:customer,
+      isAuthenticated: isAuthenticated
     });
   });
 });
@@ -238,12 +276,13 @@ app.post("/login", function(req, res) {
       if (foundUser) {
         bcrypt.compare(password, foundUser.password, function(e, result) {
           if (result === true) {
-            if(foundUser.role === "radnik"){
+            if (foundUser.role === "radnik") {
               worker = foundUser;
               res.redirect("/radnik/" + foundUser.name);
             }
-            if(foundUser.role === "narucilac"){
+            if (foundUser.role === "narucilac") {
               customer = foundUser;
+              console.log(customer);
               isAuthenticated = true;
               res.redirect("/narucilac/" + foundUser.name);
             }
@@ -310,7 +349,7 @@ app.post("/narucilac", (req, res) => {
             }
           }
         }
-        if(!exists){
+        if (!exists) {
           newCustomer.save(err => {
             if (err) console.log(err);
           });
@@ -324,6 +363,16 @@ app.post("/narucilac", (req, res) => {
   });
 });
 
+app.post("/dodajStavku", async(req, res)=>{
+  let item = new Item({
+    productId: req.body.productId,
+    quantity: Number.parseInt(req.body.value),
+    name: req.body.name,
+    price: Number.parseInt(req.body.value)*Number.parseInt(req.body.price)
+  });
+  console.log(item);
+});
+//BcO1MP9ocA
 /*UPDATE AND DELETE PRODUCT*/
 app.route("/proizvod/:id")
   .delete(function(req, res) {
