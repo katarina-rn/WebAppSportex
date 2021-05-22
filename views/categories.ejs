@@ -15,9 +15,9 @@
             <p class="card-text">Cena: <%=product.price%> din.</p>
             <p class="card-text">Cena sa PDV-om: <%=product.pricePDV%> din.</p>
             <form class="addItemForm" action="/dodajStavku" method="post">
-              <input type="hidden" name="log" class="isAuthenticated" value="<%=isAuthenticated%>">
-              <%if(customer !== null && customer !== undefined){%>
-              <input type="hidden" name="customerId" value="<%=customer._id%>">
+
+              <%if(user !== null && user !== undefined){%>
+              <input type="hidden" name="customerId" value="<%=user._id%>">
               <%}%>
               <input type="hidden" name="productId" value="<%=product._id%>">
               <input type="hidden" name="name" value="<%=product.name%>">

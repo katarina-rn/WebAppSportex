@@ -8,6 +8,14 @@ const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 const multer = require('multer');
 const generator = require('generate-password');
+const passport = require('passport');
+const session = require('express-session');
+const User = require('./models/User');
+const Product = require('./models/Product');
+const Customer = require('./models/Customer');
+const Message = require('./models/Message');
+const Item = require('./models/Item');
+require('./authentication/passport')(passport);
 const saltRounds = 10;
 
 /*MULTER*/
@@ -27,80 +35,6 @@ mongoose.connect("mongodb://localhost:27017/sportexDB", {
   useUnifiedTopology: true
 });
 
-/*CREATING SCHEMAS*/
-const messageSchema = {
-  name: String,
-  email: String,
-  telephone: String,
-  content: String,
-  read: Boolean
-}
-
-const userSchema = {
-  username: String,
-  password: String,
-  name: String,
-  role: String
-}
-
-const productSchema = {
-  name: String,
-  category: String,
-  brand: String,
-  price: Number,
-  pricePDV: Number,
-  imgUrl: String
-}
-
-const customerSchema = {
-  name: String,
-  email: String,
-  telephone: String,
-  addres: String,
-  pib: String,
-  password: String
-}
-
-const itemSchema = {
-  productId: Number,
-  quantity: Number,
-  name: String,
-  price: Number
-}
-
-
-
-/*CREATING COLLECTIONS(MODELS)*/
-const Message = mongoose.model("Message", messageSchema);
-const User = mongoose.model("User", userSchema);
-const Product = mongoose.model("Product", productSchema);
-const Customer = mongoose.model("Customer", customerSchema);
-const Item = mongoose.model("Item", itemSchema);
-
-
-const orderSchema = new mongoose.Schema({
-  customerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer"
-  },
-  products: [itemSchema],
-  active: {
-    type: Boolean,
-    default: true
-  },
-  modifiedOn: {
-    type: Date,
-    default: Date.now
-  },
-  subTotal: {
-    default: 0,
-    type: Number
-  }
-}, {
-  timestamps: true
-});
-const Order = mongoose.model("Order", orderSchema);
-
 /*SETTING APP PARAMETERS*/
 const app = express();
 app.set("view engine", "ejs");
@@ -110,6 +44,15 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(methodOverride('_method'));
 mongoose.set('useFindAndModify', false);
+app.use(
+  session({
+    secret: process.env.SECRET,
+    resave: true,
+    saveUninitialized: true
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 /*HASHING A PASSWORD*/
 bcrypt.hash(process.env.PASSWORD, saltRounds, (e, hash) => {
@@ -159,20 +102,16 @@ let categories = [{
   }
 ];
 
-let worker;
-let customer;
-let isAuthenticated = false;
 /*GET ROUTES*/
 app.get("/", function(req, res) {
   res.render("home", {
     categories: categories,
-    isAuthenticated: isAuthenticated,
-    customer: customer
+    user: req.user
   });
 });
 
 app.get("/onama", function(req, res) {
-  res.render("about",{isAuthenticated: isAuthenticated});
+  res.render("about", {user: req.user});
 });
 
 app.get("/proizvodi", function(req, res) {
@@ -180,11 +119,11 @@ app.get("/proizvodi", function(req, res) {
 });
 
 app.get("/brendovi", function(req, res) {
-  res.redirect("/#brands", {isAuthenticated: isAuthenticated});
+  res.redirect("/#brands");
 });
 
 app.get("/kontakt", function(req, res) {
-  res.render("contact", {isAuthenticated: isAuthenticated});
+  res.render("contact", {user: req.user});
 });
 
 app.get("/radnik/:name", function(req, res) {
@@ -192,16 +131,15 @@ app.get("/radnik/:name", function(req, res) {
     if (err) console.log(err);
     else res.render("homeWorker", {
       products: products,
-      user: worker
+      user: req.user
     });
   });
 });
 
 app.get("/narucilac/:name", function(req, res) {
   res.render("home", {
-    isAuthenticated: isAuthenticated,
     categories: categories,
-    customer: customer
+    user: req.user
   });
 });
 
@@ -210,7 +148,7 @@ app.get("/narucilac", (req, res) => {
     if (err) console.log(err);
     else res.render("customers", {
       customers: customers,
-      user: worker
+      user: req.user
     });
   });
 });
@@ -220,17 +158,13 @@ app.get("/poruke", function(req, res) {
     if (err) console.log(err);
     else res.render("messages", {
       messages: messages,
-      user: worker
+      user: req.user
     });
   });
 });
 
 app.get("/logout", function(req, res) {
-  worker !== null && worker === null;
-  if (customer !== null) {
-    customer = null;
-    isAuthenticated = false;
-  }
+  req.logout();
   res.redirect("/");
 });
 
@@ -245,6 +179,7 @@ app.post("/kontakt", function(req, res) {
   });
   message.save(function(err) {
     if (err) console.log(err);
+    else res.redirect("/kontakt");
   });
 });
 
@@ -258,42 +193,18 @@ app.post("/proizvodi/:category", function(req, res) {
     res.render("categories", {
       categoryTitle: cat,
       products: products,
-      customer:customer,
-      isAuthenticated: isAuthenticated
+      user: req.user
     });
   });
 });
 
 app.post("/login", function(req, res) {
-  const userName = req.body.username;
-  const password = req.body.password;
-  User.findOne({
-    username: userName
-  }, (err, foundUser) => {
-    if (err)
-      console.log(err);
-    else {
-      if (foundUser) {
-        bcrypt.compare(password, foundUser.password, function(e, result) {
-          if (result === true) {
-            if (foundUser.role === "radnik") {
-              worker = foundUser;
-              res.redirect("/radnik/" + foundUser.name);
-            }
-            if (foundUser.role === "narucilac") {
-              customer = foundUser;
-              console.log(customer);
-              isAuthenticated = true;
-              res.redirect("/narucilac/" + foundUser.name);
-            }
-
-          } else {
-            res.send("Pogresan password");
-          }
-        });
-      } else {
-        res.redirect("#login");
-      }
+  passport.authenticate('local')(req, res, () => {
+    if (req.user.role === "radnik") {
+      res.redirect("/radnik/" + req.user.name);
+    }
+    if (req.user.role === "narucilac") {
+      res.redirect("/narucilac/" + req.user.name);
     }
   });
 });
@@ -309,7 +220,7 @@ app.post("/proizvod", upload.single('productImage'), function(req, res) {
   });
   newProduct.save(err => {
     if (err) console.log(err);
-    else res.redirect("/radnik/" + worker.name);
+    else res.redirect("/radnik/" + req.user.name);
   });
 });
 
@@ -355,7 +266,7 @@ app.post("/narucilac", (req, res) => {
           });
           newUser.save(err => {
             if (err) console.log(err);
-            else res.redirect("/radnik/" + worker.name);
+            else res.redirect("/radnik/" + req.user.name);
           });
         }
       }
@@ -363,16 +274,20 @@ app.post("/narucilac", (req, res) => {
   });
 });
 
-app.post("/dodajStavku", async(req, res)=>{
-  let item = new Item({
-    productId: req.body.productId,
-    quantity: Number.parseInt(req.body.value),
-    name: req.body.name,
-    price: Number.parseInt(req.body.value)*Number.parseInt(req.body.price)
-  });
-  console.log(item);
+app.post("/dodajStavku", (req, res) => {
+  if(!req.isAuthenticated()){
+    res.send("Morate biti ulogovani");
+  } else{
+    let item = new Item({
+      productId: req.body.productId,
+      quantity: Number.parseInt(req.body.value),
+      name: req.body.name,
+      price: Number.parseInt(req.body.value) * Number.parseInt(req.body.price)
+    });
+    console.log(item);
+  }
 });
-//BcO1MP9ocA
+
 /*UPDATE AND DELETE PRODUCT*/
 app.route("/proizvod/:id")
   .delete(function(req, res) {
@@ -381,7 +296,7 @@ app.route("/proizvod/:id")
     }, err => {
       if (err) console.log(err);
     });
-    res.redirect("/radnik/" + worker.name);
+    res.redirect("/radnik/" + req.user.name);
   })
   .put(function(req, res) {
     Product.findOneAndUpdate({
@@ -395,7 +310,7 @@ app.route("/proizvod/:id")
     }, err => {
       if (err) console.log(err);
     });
-    res.redirect("/radnik/" + worker.name);
+    res.redirect("/radnik/" + req.user.name);
   });
 
 /*DELETE CUSTOMER*/
