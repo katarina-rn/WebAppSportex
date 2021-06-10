@@ -51,7 +51,34 @@
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown" style="width: 200px">
+                  <%if(cart !== null && typeof cart !== "undefined"){%>
+                    <%cart.products.forEach((p) => {%>
+                        <div class="row">
+                          <div class="col-9">
+                            <p class="dropdown-item"><%=p.name%> <br> <%=p.quantity%> kom.</p>
+                          </div>
+                          <div class="col-3">
+                            <form method="post" action="/order/<%=p._id%>?_method=PUT" onclick="return confirm('Da li ste sigurni da zelite da obrisete stavku?')">
+                              <input type="hidden" name="_method" value="PUT">
+                              <input type="hidden" name="productId" value="<%=p._id%>">
+                              <input type="hidden" name="cartId" value="<%=cart._id%>">
+                              <button type="submit" name="button" class="deleteBtn">X</button>
+                            </form>
+                          </div>
+                        </div>
+
+                    <%})%>
+                    <div class="dropdown-divider"></div>
+
+                    <form method="post" action="/order?_method=PUT" onsubmit="alert('Uspesno ste narucili proizvode')" class="orderForm">
+                      <p class="dropdown-item">Ukupna cena: <%=cart.totalPrice%></p>
+                      <input type="hidden" name="_method" value="PUT">
+                      <button type="submit" name="button" class="cartBtn">Naruci</button>
+                    </form>
+                  <%} else{%>
+                    <p class="dropdown-item">Niste odabralii nijedan<br> proizvod</p>
+                  <%}%>
                 </div>
               </li>
             <li class="nav-item dropdown">

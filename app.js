@@ -14,9 +14,8 @@ const User = require('./models/User');
 const Product = require('./models/Product');
 const Customer = require('./models/Customer');
 const Message = require('./models/Message');
-const Item = require('./models/Item');
+const Cart = require('./models/Cart');
 require('./authentication/passport')(passport);
-const saltRounds = 10;
 
 /*MULTER*/
 const storage = multer.diskStorage({
@@ -55,7 +54,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 /*HASHING A PASSWORD*/
-bcrypt.hash(process.env.PASSWORD, saltRounds, (e, hash) => {
+bcrypt.hash(process.env.PASSWORD, 10, (e, hash) => {
   const newUser = new User({
     username: "radnik",
     password: hash,
@@ -101,17 +100,21 @@ let categories = [{
     description: "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
   }
 ];
-
+let cart;
 /*GET ROUTES*/
 app.get("/", function(req, res) {
   res.render("home", {
     categories: categories,
-    user: req.user
+    user: req.user,
+    cart: cart
   });
 });
 
 app.get("/onama", function(req, res) {
-  res.render("about", {user: req.user});
+  res.render("about", {
+    user: req.user,
+    cart: cart
+  });
 });
 
 app.get("/proizvodi", function(req, res) {
@@ -123,7 +126,10 @@ app.get("/brendovi", function(req, res) {
 });
 
 app.get("/kontakt", function(req, res) {
-  res.render("contact", {user: req.user});
+  res.render("contact", {
+    user: req.user,
+    cart: cart
+  });
 });
 
 app.get("/radnik/:name", function(req, res) {
@@ -139,7 +145,8 @@ app.get("/radnik/:name", function(req, res) {
 app.get("/narucilac/:name", function(req, res) {
   res.render("home", {
     categories: categories,
-    user: req.user
+    user: req.user,
+    cart: cart
   });
 });
 
@@ -168,6 +175,22 @@ app.get("/logout", function(req, res) {
   res.redirect("/");
 });
 
+app.get("/proizvodi/:category", function(req, res) {
+  const cat = req.params.category;
+  Product.find({
+    category: cat
+  }, function(err, products) {
+    if (err)
+      console.log(err);
+    res.render("categories", {
+      categoryTitle: cat,
+      products: products,
+      user: req.user,
+      cart: cart
+    });
+  });
+});
+
 /*POST ROUTES*/
 app.post("/kontakt", function(req, res) {
   const message = new Message({
@@ -183,27 +206,22 @@ app.post("/kontakt", function(req, res) {
   });
 });
 
-app.post("/proizvodi/:category", function(req, res) {
-  const cat = req.params.category;
-  Product.find({
-    category: cat
-  }, function(err, products) {
-    if (err)
-      console.log(err);
-    res.render("categories", {
-      categoryTitle: cat,
-      products: products,
-      user: req.user
-    });
-  });
-});
-
 app.post("/login", function(req, res) {
   passport.authenticate('local')(req, res, () => {
     if (req.user.role === "radnik") {
       res.redirect("/radnik/" + req.user.name);
     }
     if (req.user.role === "narucilac") {
+      Cart.findOne({
+        userId: req.user._id,
+        active: true
+      }, (err, found) => {
+        if (err) console.log(err);
+        if (found)
+          cart = found;
+        else
+          cart = null;
+      });
       res.redirect("/narucilac/" + req.user.name);
     }
   });
@@ -220,7 +238,7 @@ app.post("/proizvod", upload.single('productImage'), function(req, res) {
   });
   newProduct.save(err => {
     if (err) console.log(err);
-    else res.redirect("/radnik/" + req.user.name);
+    else res.redirect(req.get('referer'));
   });
 });
 
@@ -230,7 +248,7 @@ app.post("/narucilac", (req, res) => {
     numbers: true
   });
   console.log(generatedPassword);
-  bcrypt.hash(generatedPassword, saltRounds, (e, hash) => {
+  bcrypt.hash(generatedPassword, 10, (e, hash) => {
     const newCustomer = new Customer({
       name: req.body.customerName,
       email: req.body.customerEmail,
@@ -266,26 +284,12 @@ app.post("/narucilac", (req, res) => {
           });
           newUser.save(err => {
             if (err) console.log(err);
-            else res.redirect("/radnik/" + req.user.name);
+            else res.redirect(req.get('referer'));
           });
         }
       }
     });
   });
-});
-
-app.post("/dodajStavku", (req, res) => {
-  if(!req.isAuthenticated()){
-    res.send("Morate biti ulogovani");
-  } else{
-    let item = new Item({
-      productId: req.body.productId,
-      quantity: Number.parseInt(req.body.value),
-      name: req.body.name,
-      price: Number.parseInt(req.body.value) * Number.parseInt(req.body.price)
-    });
-    console.log(item);
-  }
 });
 
 /*UPDATE AND DELETE PRODUCT*/
@@ -296,7 +300,7 @@ app.route("/proizvod/:id")
     }, err => {
       if (err) console.log(err);
     });
-    res.redirect("/radnik/" + req.user.name);
+    res.redirect(req.get('referer'));
   })
   .put(function(req, res) {
     Product.findOneAndUpdate({
@@ -310,13 +314,92 @@ app.route("/proizvod/:id")
     }, err => {
       if (err) console.log(err);
     });
-    res.redirect("/radnik/" + req.user.name);
+    res.redirect(req.get('referer'));
   });
+
+/*ORDERS*/
+app.post("/order", (req, res) => {
+  if (!req.isAuthenticated()) {
+    res.send("Morate biti ulogovani");
+  } else {
+    let item = {
+      productId: req.body.productId,
+      quantity: Number.parseInt(req.body.value),
+      name: req.body.name,
+      price: Number.parseInt(req.body.price),
+      total: Number.parseInt(req.body.value) * Number.parseInt(req.body.price)
+    };
+    if (cart !== null && typeof cart != "undefined") {
+      let index = cart.products.findIndex(p => p.productId == item.productId);
+      if (index > -1) {
+        cart.products[index].quantity = item.quantity;
+        cart.products[index].total = item.total;
+        cart.totalPrice = 0;
+        cart.products.forEach(i => {
+          cart.totalPrice += i.total;
+        })
+      } else {
+        cart.products.push(item);
+        cart.totalPrice += item.total;
+      }
+      cart.save(err => {
+        if (err)
+          console.log(err);
+      });
+    } else {
+      cart = new Cart({
+        userId: req.user._id,
+        products: [item],
+        active: true,
+        totalPrice: item.total,
+        modifiedOn: new Date()
+      });
+      cart.save(err => {
+        if (err)
+          console.log(err);
+      });
+    }
+    res.redirect(req.get('referer'));
+  }
+});
+
+app.put("/order", (req, res) => {
+  cart.active = false;
+  cart.save(err => {
+    if (err)
+      console.log(err);
+  });
+  cart = null;
+  res.redirect(req.get('referer'));
+});
+
+app.put("/order/:productId", (req, res) => {
+  cart.products = cart.products.filter(p => {
+    return p._id != req.params.productId;
+  });
+  cart.totalPrice = 0;
+  cart.products.forEach(i => {
+    cart.totalPrice += i.total;
+  })
+  if (cart.products.length > 0) {
+    cart.save(err => {
+      if (err)
+        console.log(err);
+    })
+  } else {
+    cart = null;
+    Cart.deleteOne({
+      _id: req.body.cartId
+    }, err => {
+      if (err) console.log(err);
+    });
+  }
+  res.redirect(req.get('referer'));
+})
 
 /*DELETE CUSTOMER*/
 app.route("/narucilac/:id")
   .delete(function(req, res) {
-    let customerToDelete;
     Customer.deleteOne({
       _id: req.params.id
     }, err => {
@@ -327,7 +410,7 @@ app.route("/narucilac/:id")
     }, err => {
       if (err) console.log(err);
     });
-    res.redirect("/narucilac");
+    res.redirect(req.get('referer'));
   })
 
 app.listen(3000, function() {

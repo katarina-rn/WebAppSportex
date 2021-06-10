@@ -8,7 +8,7 @@
           <div class="card-body">
             <h5 class="card-title"><%=category.title%></h5>
             <p class="card-text"><%=category.description%></p>
-            <form action="/proizvodi/<%=category.title%>" method="post" class="pages">
+            <form class="pages" action="/proizvodi/<%=category.title%>" method="GET">
               <button type="submit" name="submit" class="seeMore"><span>Vidi vise</span></button>
             </form>
           </div>

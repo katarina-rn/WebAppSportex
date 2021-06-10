@@ -73,6 +73,21 @@ p{
   width: 20%;
 }
 
+.cartBtn, .deleteBtn{
+  background-color: #007965;
+  border-radius: 5px;
+  color: #ffcc29;
+  width: 80%;
+  margin: auto;
+  border-color: #ffcc29;
+}
+.deleteBtn{
+  margin-top: 10px;
+}
+.orderForm{
+  text-align: center;
+}
+
 /*CONTACT FORM*/
 label {
   font-family: 'Oxygen', sans-serif;

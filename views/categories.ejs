@@ -14,13 +14,13 @@
             <p class="card-text">Brand: <%=product.brand%></p>
             <p class="card-text">Cena: <%=product.price%> din.</p>
             <p class="card-text">Cena sa PDV-om: <%=product.pricePDV%> din.</p>
-            <form class="addItemForm" action="/dodajStavku" method="post">
-
+            <form class="addItemForm" action="/order" method="post">
               <%if(user !== null && user !== undefined){%>
               <input type="hidden" name="customerId" value="<%=user._id%>">
               <%}%>
               <input type="hidden" name="productId" value="<%=product._id%>">
               <input type="hidden" name="name" value="<%=product.name%>">
+              <input type="hidden" name="category" value="<%=product.category%>">
               <input type="hidden" name="price" value="<%=product.pricePDV%>">
               <input type="text" name="value" value="" class="quantity">
               <button type="submit" value="submit">+</button>
